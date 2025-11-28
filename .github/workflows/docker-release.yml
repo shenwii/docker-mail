@@ -30,7 +30,7 @@ jobs:
         run: |
           for image_id in dovecot postfix; do
             IMAGE=ghcr.io/${{ secrets.GHCR_USER }}/${image_id}
-            docker build -t $IMAGE:${{ steps.vars.outputs.version }} -t $IMAGE:latest .
+            docker build -t $IMAGE:${{ steps.vars.outputs.version }} -t $IMAGE:latest ${image_id}
             docker push $IMAGE:${{ steps.vars.outputs.version }}
             docker push $IMAGE:latest
           done
