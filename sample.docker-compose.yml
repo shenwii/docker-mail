@@ -1,0 +1,33 @@
+services:
+    postfix:
+        image: ghcr.io/shenwii/postfix
+        container_name: postfix
+        ports:
+            - 25:25
+            - 465:465
+            - 587:587
+        env_file:
+            - app.env
+        volumes:
+            - ./mail:/mail
+            - ./socket:/var/spool/postfix/dovecot
+            - ./ssl:/ssl
+        restart: unless-stopped
+        depends_on:
+            - dovecot
+
+    dovecot:
+        image: ghcr.io/shenwii/dovecot
+        container_name: dovecot
+        ports:
+            - 110:110
+            - 143:143
+            - 993:993
+            - 995:995
+        env_file:
+            - app.env
+        volumes:
+            - ./mail:/mail
+            - ./socket:/socket
+            - ./ssl:/ssl
+        restart: unless-stopped
