@@ -7,6 +7,23 @@ init() {
 
     touch /.installed
 
+    mkdir -p /etc/dovecot/conf.d
+
+    local VERSION="$(dovecot --version | cut -d - -f 1)"
+
+    cat >/etc/dovecot/dovecot.conf <<EOF
+dovecot_config_version = $VERSION
+dovecot_storage_version = $VERSION
+!include conf.d/*.conf
+EOF
+
+    cat >/etc/dovecot/conf.d/10-protocols.conf <<EOF
+protocols {
+  imap = yes
+  lmtp = yes
+  pop3 = yes
+}
+EOF
     cat >/etc/dovecot/conf.d/10-auth.conf <<EOF
 !include auth-sql.conf.ext
 EOF
@@ -14,7 +31,6 @@ EOF
     cat >/etc/dovecot/conf.d/auth-sql.conf.ext <<EOF
 sql_driver = mysql
 mysql $DB_HOST {
-  ssl = yes
   user = $DB_USER
   password = $DB_PASSWORD
   dbname = $DB_DBNAME

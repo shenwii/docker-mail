@@ -7,18 +7,21 @@ init() {
 
     touch /.installed
 
+    postalias /etc/postfix/aliases
+
+    #maybe it's is a bug
+    DB_HOST=$(nslookup -type=A $DB_HOST | grep 'Address:' | tail -n 1 | awk '{ print $2 }')
+
     cat >/etc/postfix/main.cf <<EOF
 compatibility_level = 3.10
-smtpd_banner = \$myhostname ESMTP \$mail_name (Debian/GNU)
+smtpd_banner = \$myhostname ESMTP \$mail_name (Alpine)
 biff = no
 myhostname = $MAIL_DOMAIN
 myorigin = \$myhostname
 mydestination = localhost
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
 maillog_file = /dev/stdout
-alias_maps = hash:/etc/aliases
-alias_database = hash:/etc/aliases
-
+smtp_host_lookup = dns, native
 inet_protocols = all
 inet_interfaces = all
 
