@@ -13,6 +13,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -30,7 +36,5 @@ jobs:
         run: |
           for image_id in dovecot postfix; do
             IMAGE=ghcr.io/${{ secrets.GHCR_USER }}/${image_id}
-            docker build -t $IMAGE:${{ steps.vars.outputs.version }} -t $IMAGE:latest ${image_id}
-            docker push $IMAGE:${{ steps.vars.outputs.version }}
-            docker push $IMAGE:latest
+            docker buildx build --platform linux/386,linux/amd64,linux/arm,linux/arm64 -t $IMAGE:${{ steps.vars.outputs.version }} -t $IMAGE:latest --push ${image_id}
           done
