@@ -12,7 +12,7 @@ ENV DB_HOST=127.0.0.1
 ENV DB_DBNAME=vmail
 
 
-RUN addgroup -g 200 postfix && adduser -G postfix -u 200 -h /var/spool/postfix -H -S postfix && apk update && apk add --no-cache postfix postfix-mysql && rm -rf /var/cache/apk/*
+RUN addgroup -g 200 postfix && adduser -G postfix -u 200 -h /var/spool/postfix -H -S postfix && apk update && apk add --no-cache postfix postfix-mysql tzdata && rm -rf /var/cache/apk/*
 
 COPY docker-entrypoint.sh /usr/local/bin/
 
