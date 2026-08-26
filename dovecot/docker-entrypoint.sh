@@ -9,7 +9,7 @@ init() {
 
     mkdir -p /etc/dovecot/conf.d
 
-    local VERSION="$(dovecot --version | cut -d - -f 1)"
+    local VERSION="$(dovecot --version | cut -d " " -f 1)"
 
     cat >/etc/dovecot/dovecot.conf <<EOF
 dovecot_config_version = $VERSION
