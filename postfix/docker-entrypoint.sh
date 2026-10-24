@@ -24,14 +24,16 @@ maillog_file = /dev/stdout
 inet_protocols = all
 inet_interfaces = all
 
+smtpd_client_auth_rate_limit = 3
+anvil_rate_time_unit = 60
+smtpd_soft_error_limit = 3
+smtpd_hard_error_limit = 5
+smtpd_error_sleep_time = 5s
+
 local_transport = lmtp:unix:dovecot/dovecot-lmtp
 virtual_transport = lmtp:unix:dovecot/dovecot-lmtp
 mailbox_transport = lmtp:unix:dovecot/dovecot-lmtp
 lmtp_host_lookup = native
-
-smtpd_tls_key_file = $TLS_KEY_FILE
-smtpd_tls_cert_file = $TLS_CERY_FILE
-smtpd_tls_security_level = may
 
 smtpd_sasl_type = dovecot
 smtpd_sasl_path = dovecot/auth
@@ -44,6 +46,39 @@ virtual_mailbox_maps = mysql:/etc/postfix/db-virtual-mailbox-maps.cf
 virtual_alias_maps = mysql:/etc/postfix/db-virtual-alias-maps.cf
 virtual_alias_domains = mysql:/etc/postfix/db-virtual-alias-domains.cf
 EOF
+
+    if [ "$USE_TLS" = "1" ]; then
+        cat >>/etc/postfix/main.cf <<EOF
+
+smtpd_tls_key_file = $TLS_KEY_FILE
+smtpd_tls_cert_file = $TLS_CERT_FILE
+smtpd_tls_security_level = may
+EOF
+    fi
+
+
+    if [ "$USE_RELAY" = "1" ]; then
+        if [ -z "$RELAYHOST" -o -z "$SMTP_USER" -o -z "$SMTP_PASSWORD" ]; then
+            echo "Warning: RELAYHOST or SMTP_USER or SMTP_PASSWORD not set" >&2
+        else
+            cat >/etc/postfix/sasl_passwd <<EOF
+$RELAYHOST $SMTP_USER:$SMTP_PASSWORD
+EOF
+            cat >>/etc/postfix/main.cf <<EOF
+
+relayhost = $RELAYHOST
+
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+
+smtp_tls_security_level = verify
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+EOF
+            chmod 600 /etc/postfix/sasl_passwd
+            postmap /etc/postfix/sasl_passwd
+        fi
+    fi
 
     cat >/etc/postfix/db-virtual-mailbox-domains.cf <<EOF
 user = $DB_USER
@@ -84,10 +119,6 @@ EOF
     cat >/etc/postfix/master.cf <<'EOF'
 postlog   unix-dgram n  -       n       -       1       postlogd
 smtp      inet  n       -       y       -       -       smtpd
-submission inet n       -       y       -       -       smtpd
- -o smtpd_tls_security_level=encrypt
-submissions     inet  n       -       y       -       -       smtpd
-  -o smtpd_tls_wrappermode=yes
 pickup    unix  n       -       y       60      1       pickup
 cleanup   unix  n       -       y       -       0       cleanup
 qmgr      unix  n       -       n       300     1       qmgr
@@ -113,7 +144,15 @@ virtual   unix  -       n       n       -       -       virtual
 lmtp      unix  -       -       y       -       -       lmtp
 anvil     unix  -       -       y       -       1       anvil
 scache    unix  -       -       y       -       1       scache
+submission inet n       -       y       -       -       smtpd
 EOF
+    if [ "$USE_TLS" = "1" ]; then
+        cat >>/etc/postfix/master.cf <<'EOF'
+ -o smtpd_tls_security_level=encrypt
+submissions     inet  n       -       y       -       -       smtpd
+  -o smtpd_tls_wrappermode=yes
+EOF
+    fi
 }
 
 if [ "$1" = 'postfix' ]; then

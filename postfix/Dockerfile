@@ -1,6 +1,7 @@
 FROM docker.io/alpine:latest
 
-ENV TLS_CERY_FILE=/ssl/sample.com.cer
+ENV USE_TLS=0
+ENV TLS_CERT_FILE=/ssl/sample.com.cer
 ENV TLS_KEY_FILE=/ssl/sample.com.key
 ENV MAIL_DOMAIN=sample.com
 #only support mysql now
@@ -10,9 +11,12 @@ ENV DB_PASSWORD=123456
 ENV DB_PORT=3306
 ENV DB_HOST=127.0.0.1
 ENV DB_DBNAME=vmail
+ENV USE_RELAY=0
+ENV RELAYHOST=
+ENV SMTP_USER=
+ENV SMTP_PASSWORD=
 
-
-RUN addgroup -g 200 postfix && adduser -G postfix -u 200 -h /var/spool/postfix -H -S postfix && apk update && apk add --no-cache postfix postfix-mysql tzdata && rm -rf /var/cache/apk/*
+RUN addgroup -g 200 postfix && adduser -G postfix -u 200 -h /var/spool/postfix -H -S postfix &&  apk add --no-cache postfix postfix-mysql tzdata
 
 COPY docker-entrypoint.sh /usr/local/bin/
 

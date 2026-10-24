@@ -26,6 +26,7 @@ protocols {
 EOF
     cat >/etc/dovecot/conf.d/10-auth.conf <<EOF
 !include auth-sql.conf.ext
+auth_fail_delay = 5s
 EOF
 
     cat >/etc/dovecot/conf.d/auth-sql.conf.ext <<EOF
@@ -62,20 +63,32 @@ service imap-login {
   inet_listener imap {
     port = 143
   }
+EOF
+    if [ "$USE_TLS" = "1" ]; then
+        cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
   inet_listener imaps {
     port = 993
     ssl = yes
   }
+EOF
+    fi
+    cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
 }
 
 service pop3-login {
   inet_listener pop3 {
     port = 110
   }
+EOF
+    if [ "$USE_TLS" = "1" ]; then
+        cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
   inet_listener pop3s {
     port = 995
     ssl = yes
   }
+EOF
+    fi
+    cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
 }
 
 service lmtp {
@@ -104,12 +117,14 @@ service auth-worker {
 }
 EOF
 
-  cat >/etc/dovecot/conf.d/10-ssl.conf <<EOF
+if [ "$USE_TLS" = "1" ]; then
+    cat >/etc/dovecot/conf.d/10-ssl.conf <<EOF
 ssl = yes
-ssl_server_cert_file = $TLS_CERY_FILE
+ssl_server_cert_file = $TLS_CERT_FILE
 ssl_server_key_file = $TLS_KEY_FILE
 ssl_min_protocol = TLSv1.2
 EOF
+fi
 
   cat >/etc/dovecot/conf.d/10-logging.conf <<EOF
 log_path = /dev/stdout
