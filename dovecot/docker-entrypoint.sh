@@ -62,32 +62,40 @@ service imap-login {
   inet_listener imap {
     port = 143
   }
+  inet_listener imaps {
 EOF
     if [ "$USE_TLS" = "1" ]; then
         cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
-  inet_listener imaps {
     port = 993
     ssl = yes
-  }
+EOF
+    else
+        cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
+    port = 0
 EOF
     fi
     cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
+  }
 }
 
 service pop3-login {
   inet_listener pop3 {
     port = 110
   }
+  inet_listener pop3s {
 EOF
     if [ "$USE_TLS" = "1" ]; then
         cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
-  inet_listener pop3s {
     port = 995
     ssl = yes
-  }
+EOF
+    else
+        cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
+    port = 0
 EOF
     fi
     cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
+  }
 }
 
 service lmtp {
