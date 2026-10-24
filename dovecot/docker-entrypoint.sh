@@ -45,6 +45,12 @@ userdb sql {
 }
 EOF
 
+    if [ "$USE_HAPROXY" = "1" ]; then
+        cat >/etc/dovecot/conf.d/10-proxy.conf <<EOF
+haproxy_trusted_networks = $TRUSTED_PROXY_NETWORKS
+EOF
+    fi
+
     cat >/etc/dovecot/conf.d/10-mail.conf <<EOF
 mail_privileged_group = vmail
 mail_driver = maildir
@@ -61,41 +67,61 @@ EOF
 service imap-login {
   inet_listener imap {
     port = 143
-  }
-  inet_listener imaps {
 EOF
-    if [ "$USE_TLS" = "1" ]; then
+    if [ "$USE_HAPROXY" = "1" ]; then
         cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
-    port = 993
-    ssl = yes
-EOF
-    else
-        cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
-    port = 0
+    haproxy = yes
 EOF
     fi
     cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
   }
+EOF
+    if [ "$USE_TLS" = "1" ]; then
+        cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
+  inet_listener imaps {
+    port = 993
+    ssl = yes
+EOF
+        if [ "$USE_HAPROXY" = "1" ]; then
+            cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
+    haproxy = yes
+EOF
+        fi
+        cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
+  }
+EOF
+    fi
+    cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
 }
 
 service pop3-login {
   inet_listener pop3 {
     port = 110
-  }
-  inet_listener pop3s {
 EOF
-    if [ "$USE_TLS" = "1" ]; then
+    if [ "$USE_HAPROXY" = "1" ]; then
         cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
-    port = 995
-    ssl = yes
-EOF
-    else
-        cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
-    port = 0
+    haproxy = yes
 EOF
     fi
     cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
   }
+EOF
+    if [ "$USE_TLS" = "1" ]; then
+        cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
+  inet_listener pop3s {
+    port = 995
+    ssl = yes
+EOF
+        if [ "$USE_HAPROXY" = "1" ]; then
+            cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
+    haproxy = yes
+EOF
+        fi
+        cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
+  }
+EOF
+    fi
+    cat >>/etc/dovecot/conf.d/10-master.conf <<EOF
 }
 
 service lmtp {
@@ -145,4 +171,4 @@ if [ "$1" = 'dovecot' ]; then
     init
 fi
 
-exec "$@"
+exec "$@""

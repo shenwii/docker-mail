@@ -47,6 +47,13 @@ virtual_alias_maps = mysql:/etc/postfix/db-virtual-alias-maps.cf
 virtual_alias_domains = mysql:/etc/postfix/db-virtual-alias-domains.cf
 EOF
 
+    if [ "$USE_HAPROXY" = "1" ]; then
+        cat >>/etc/postfix/main.cf <<EOF
+smtpd_client_connection_count_limit = 10
+smtpd_client_event_limit_exceptions = $TRUSTED_PROXY_NETWORKS
+EOF
+    fi
+
     if [ "$USE_TLS" = "1" ]; then
         cat >>/etc/postfix/main.cf <<EOF
 
@@ -119,6 +126,14 @@ EOF
     cat >/etc/postfix/master.cf <<'EOF'
 postlog   unix-dgram n  -       n       -       1       postlogd
 smtp      inet  n       -       y       -       -       smtpd
+EOF
+    if [ "$USE_HAPROXY" = "1" ]; then
+        cat >>/etc/postfix/master.cf <<'EOF'
+  -o smtpd_proxy_protocol=yes
+  -o receive_override_options=no_unknown_recipient_checks,no_address_mappings
+EOF
+    fi
+    cat >>/etc/postfix/master.cf <<'EOF'
 pickup    unix  n       -       y       60      1       pickup
 cleanup   unix  n       -       y       -       0       cleanup
 qmgr      unix  n       -       n       300     1       qmgr
