@@ -26,7 +26,6 @@ protocols {
 EOF
     cat >/etc/dovecot/conf.d/10-auth.conf <<EOF
 !include auth-sql.conf.ext
-auth_fail_delay = 5s
 EOF
 
     cat >/etc/dovecot/conf.d/auth-sql.conf.ext <<EOF
