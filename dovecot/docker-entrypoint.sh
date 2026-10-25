@@ -171,4 +171,4 @@ if [ "$1" = 'dovecot' ]; then
     init
 fi
 
-exec "$@""
+exec "$@"
