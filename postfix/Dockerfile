@@ -16,7 +16,7 @@ ENV RELAYHOST=
 ENV SMTP_USER=
 ENV SMTP_PASSWORD=
 ENV USE_HAPROXY=0
-ENV TRUSTED_PROXY_NETWORKS=127.0.0.1/8 ::1/128
+ENV TRUSTED_PROXY_NETWORKS="127.0.0.1/8 ::1/128"
 
 RUN addgroup -g 200 postfix && adduser -G postfix -u 200 -h /var/spool/postfix -H -S postfix &&  apk add --no-cache postfix postfix-mysql tzdata
 
